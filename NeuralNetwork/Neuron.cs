@@ -1,68 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace NeuralNetwork
 {
-    public class SignalArgs: EventArgs
-    {
-        public SignalArgs(double value)
-        {
-            Value = value;
-        }
-
-        public double Value { get; }
-
-    }
-
     [Serializable]
     public class Neuron
     {
-        private readonly Dictionary<Neuron, double> _parrents;
-        private readonly bool _useActivation;
-        private event EventHandler<SignalArgs> GeneratedSignal;
-
-        public Neuron(Dictionary<Neuron, double> parrents, bool useActivation=true)
+        public Neuron()
         {
-            _useActivation = useActivation;
-            _parrents = parrents ?? new Dictionary<Neuron, double>();
+            Children = new Dictionary<Neuron, double>();
+            Parents = new List<Neuron>();
+            UseActivationCalc = true;
+        }
 
-            if (parrents != null)
+        public Neuron(bool useActivation) : this()
+        {
+            UseActivationCalc = useActivation;
+        }
+
+        [XmlIgnore]
+        public double ActivationValue { get; private set; }
+
+        public readonly Dictionary<Neuron, double> Children;
+        public readonly List<Neuron> Parents;
+        public bool UseActivationCalc { get; set; }
+
+        public void Connect(Dictionary<Neuron, double> children)
+        {
+            foreach (var child in children)
             {
-                foreach (var father in parrents)
-                {
-                    father.Key.AddChild(this, father.Value);
-                    father.Key.GeneratedSignal += OnInputSignal;
-                }
+                Children.Add(child.Key, child.Value);
+                child.Key.AddFather(this);
             }
         }
 
-        private void AddChild(Neuron neuron, double childWeight)
+        private void AddFather(Neuron father)
         {
-            _parrents.Add(neuron, childWeight);
+            Parents.Add(father);
         }
-
-        public double Value { get; private set; } 
 
         public void Activation(double value)
         {
-            foreach (var parrent in _parrents)
+            if (UseActivationCalc)
+                ActivationValue = Calc(Parents.Sum(am => am.ActivationValue * am.Children[this]));
+            else
+                ActivationValue = value;
+
+            foreach (var child in Children)
             {
-                var result = _useActivation ? Calc(value, parrent.Value) : (value * parrent.Value);
-                Value = result;
-                GeneratedSignal?.Invoke(this, new SignalArgs(result));
+                child.Key.Activation(ActivationValue);
             }
         }
 
-        public static double Calc(double value, double weight)
+        public static double Calc(double value)
         {
             return (1 / (1 + Math.Exp(-value)));
         }
-
-        private void OnInputSignal(object sender, SignalArgs args)
-        {
-            Activation(_parrents?.Sum(am => am.Key.Value) ?? args.Value);
-        }
-
     }
 }
