@@ -50,8 +50,8 @@ namespace NeuralUnitTest
             var neuron1 = new Neuron();
             var neuron2 = new Neuron();
 
-            input1.Connect(new Dictionary<Neuron, double>() {{neuron1, 0.9}, {neuron2, 0.3}});
-            input2.Connect(new Dictionary<Neuron, double>() {{neuron1, 0.2}, {neuron2, 0.8}});
+            input1.Connect(new Dictionary<Neuron, double>() {{neuron1, 0.9}, {neuron2, 0.2}});
+            input2.Connect(new Dictionary<Neuron, double>() {{neuron1, 0.3}, {neuron2, 0.8}});
             input1.Activation(1);
             input2.Activation(0.5);
 
