@@ -96,5 +96,30 @@ namespace NeuralUnitTest
             Assert.AreEqual(0.778, res3);
         }
 
+        [TestMethod]
+        public void Test6NeuronCorrect()
+        {
+            var input1 = new Neuron(false);
+            var input2 = new Neuron(false);
+            var hide1 = new Neuron();
+            var hide2 = new Neuron();
+            var out1 = new Neuron();
+            var out2 = new Neuron();
+
+            input1.Connect(new Dictionary<Neuron, double>() { { hide1, 0.3 }, { hide2, 0.1 } });
+            input2.Connect(new Dictionary<Neuron, double>() { { hide1, 0.2 }, { hide2, 0.7 } });
+            hide1.Connect(new Dictionary<Neuron, double>() { { out1, 0.2 }, { out2, 0.1 } });
+            hide2.Connect(new Dictionary<Neuron, double>() { { out1, 0.3 }, { out2, 0.4 } });
+
+            input1.Activation(1);
+            input2.Activation(0.5);
+
+            var res1 = Math.Round(out1.ActivationValue, 1);
+            Assert.AreEqual(1.5, res1);
+            var res2 = Math.Round(out2.ActivationValue, 1);
+            Assert.AreEqual(0.5, res2);
+        }
+
+
     }
 }
