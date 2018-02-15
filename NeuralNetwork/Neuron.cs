@@ -12,20 +12,12 @@ namespace NeuralNetwork
         {
             Children = new Dictionary<Neuron, double>();
             Parents = new List<Neuron>();
-            UseActivationCalc = true;
         }
 
-        public Neuron(bool useActivation) : this()
-        {
-            UseActivationCalc = useActivation;
-        }
-
-        [XmlIgnore]
-        public double ActivationValue { get; private set; }
+        [XmlIgnore] public double ActivationValue { get; private set; }
 
         public readonly Dictionary<Neuron, double> Children;
         public readonly List<Neuron> Parents;
-        public bool UseActivationCalc { get; set; }
 
         public void Connect(Dictionary<Neuron, double> children)
         {
@@ -41,22 +33,50 @@ namespace NeuralNetwork
             Parents.Add(father);
         }
 
+        public void Input(double value)
+        {
+            ActivationValue = value;
+            ChildrenEnumerate(ActivationValue);
+        }
+
         public void Activation(double value)
         {
-            if (UseActivationCalc)
-                ActivationValue = Calc(Parents.Sum(am => am.ActivationValue * am.Children[this]));
-            else
-                ActivationValue = value;
+            ActivationValue = ActivationCalc(Parents.Sum(am => am.ActivationValue * am.Children[this]));
+            ChildrenEnumerate(ActivationValue);
+        }
 
-            foreach (var child in Children)
+        public void Correction(double value)
+        {
+            var sum = Parents?.Sum(am => am.ActivationValue)??0;
+            if (sum == 0)
             {
-                child.Key.Activation(ActivationValue);
+                ActivationValue -= value;
+                return;
+            }
+
+            foreach (var parent in Parents)
+            {
+                var res = CorrectionCalc(sum, parent.ActivationValue, value);
+                parent.Correction(res);
             }
         }
 
-        public static double Calc(double value)
+        private void ChildrenEnumerate(double activate)
+        {
+            foreach (var child in Children)
+            {
+                child.Key.Activation(activate);
+            }
+        }
+
+        public static double ActivationCalc(double value)
         {
             return (1 / (1 + Math.Exp(-value)));
+        }
+
+        public static double CorrectionCalc(double summ, double part, double value)
+        {
+            return (part / summ) * value;
         }
     }
 }
